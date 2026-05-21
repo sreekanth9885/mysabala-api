@@ -101,6 +101,7 @@ class AuthController
 
         $userModel->updateLastLogin($user['id']);
 
+        $user = $userModel->findByEmail($email);
         /*
         |--------------------------------------------------------------------------
         | Generate JWT
