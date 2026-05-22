@@ -18,17 +18,14 @@ class Router
     {
         $this->routes['DELETE'][] = [$path, $handler];
     }
-
     public function put(string $path, callable $handler)
     {
         $this->routes['PUT'][] = [$path, $handler];
     }
-
     public function patch(string $path, callable $handler)
     {
         $this->routes['PATCH'][] = [$path, $handler];
     }
-
     public function dispatch()
     {
         $method = $_SERVER['REQUEST_METHOD'];
@@ -39,6 +36,7 @@ class Router
         }
 
         foreach ($this->routes[$method] as [$route, $handler]) {
+
             // Convert /sections/{id} → regex
             $pattern = preg_replace('#\{[^/]+\}#', '([^/]+)', $route);
             $pattern = '#^' . $pattern . '$#';
