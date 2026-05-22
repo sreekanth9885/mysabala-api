@@ -4,7 +4,7 @@ require_once __DIR__ . '/config/cors.php';
 
 // Config & DB
 require_once __DIR__ . '/config/env.php';
-$db = require_once __DIR__ . '/config/database.php'; // This will return the PDO connection
+require_once __DIR__ . '/config/database.php';
 
 // Core
 require_once __DIR__ . '/app/Core/Response.php';
@@ -15,9 +15,9 @@ require_once __DIR__ . '/app/controllers/CategoryController.php';
 require_once __DIR__ . '/app/controllers/SubCategoryController.php';
 
 // Instantiate controllers with database
-$authController = new AuthController($db);
-$categoryController = new CategoryController($db);
-$subCategoryController = new SubCategoryController($db);
+$authController = new AuthController($pdo);
+$categoryController = new CategoryController($pdo);
+$subCategoryController = new SubCategoryController($pdo);
 
 $router = new Router();
 
