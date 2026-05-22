@@ -1,4 +1,5 @@
 <?php
+
 class SubCategoryModel
 {
     private PDO $db;
@@ -8,135 +9,160 @@ class SubCategoryModel
         $this->db = $db;
     }
 
-    public function create(int $categoryId, string $name, ?string $description = null): int
-    {
-        if ($this->exists($categoryId, $name)) {
-            throw new Exception("Sub-category already exists in this category");
-        }
+    // Create Sub Category
+    public function create(
+        int $categoryId,
+        string $name,
+        ?string $description,
+        int $isActive = 1
+    ): int {
 
         $stmt = $this->db->prepare("
-            INSERT INTO sub_categories (category_id, name, description, is_active)
-            VALUES (?, ?, ?, 1)
+            INSERT INTO sub_categories
+            (
+                category_id,
+                name,
+                description,
+                is_active
+            )
+            VALUES (?, ?, ?, ?)
         ");
 
-        $stmt->execute([$categoryId, $name, $description]);
+        $stmt->execute([
+            $categoryId,
+            $name,
+            $description,
+            $isActive
+        ]);
 
         return (int)$this->db->lastInsertId();
     }
 
-    public function update(int $id, int $categoryId, string $name, ?string $description = null): bool
+    // Get All Sub Categories
+    public function all(): array
     {
-        if ($this->exists($categoryId, $name, $id)) {
-            throw new Exception("Duplicate sub-category");
-        }
-
         $stmt = $this->db->prepare("
-            UPDATE sub_categories 
-            SET category_id = ?, name = ?, description = ?
-            WHERE id = ? AND is_active = 1
+            SELECT
+                sc.id,
+                sc.category_id,
+                c.name AS category_name,
+                sc.name,
+                sc.description,
+                sc.is_active,
+                sc.created_at
+            FROM sub_categories sc
+            INNER JOIN categories c
+                ON c.id = sc.category_id
+            ORDER BY sc.id DESC
         ");
 
-        $stmt->execute([$categoryId, $name, $description, $id]);
-
-        return $stmt->rowCount() > 0;
-    }
-
-    public function delete(int $id): bool
-    {
-        try {
-            $this->db->beginTransaction();
-
-            // Check if sub-category has products (if products table exists)
-            // Uncomment if you have products table
-            /*
-            $productStmt = $this->db->prepare("
-                SELECT COUNT(*) as total
-                FROM products
-                WHERE sub_category_id = ? AND is_active = 1
-            ");
-            $productStmt->execute([$id]);
-            $productCount = $productStmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($productCount['total'] > 0) {
-                throw new Exception("Cannot delete sub-category. Products are linked.");
-            }
-            */
-
-            // Soft delete sub-category
-            $stmt = $this->db->prepare("
-                UPDATE sub_categories
-                SET is_active = 0
-                WHERE id = ?
-            ");
-
-            $stmt->execute([$id]);
-            $this->db->commit();
-
-            return $stmt->rowCount() > 0;
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            throw $e;
-        }
-    }
-
-    public function all(int $categoryId = null): array
-    {
-        if ($categoryId) {
-            $stmt = $this->db->prepare("
-                SELECT sc.id, sc.name, sc.description, sc.category_id, sc.created_at,
-                       c.name as category_name
-                FROM sub_categories sc
-                LEFT JOIN categories c ON sc.category_id = c.id
-                WHERE sc.is_active = 1 AND sc.category_id = ?
-                ORDER BY sc.id DESC
-            ");
-            $stmt->execute([$categoryId]);
-        } else {
-            $stmt = $this->db->prepare("
-                SELECT sc.id, sc.name, sc.description, sc.category_id, sc.created_at,
-                       c.name as category_name
-                FROM sub_categories sc
-                LEFT JOIN categories c ON sc.category_id = c.id
-                WHERE sc.is_active = 1
-                ORDER BY sc.id DESC
-            ");
-            $stmt->execute();
-        }
+        $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getById(int $id): ?array
+    // Get Single Sub Category
+    public function findById(int $id): ?array
     {
         $stmt = $this->db->prepare("
-            SELECT sc.*, c.name as category_name
+            SELECT
+                sc.id,
+                sc.category_id,
+                c.name AS category_name,
+                sc.name,
+                sc.description,
+                sc.is_active,
+                sc.created_at
             FROM sub_categories sc
-            LEFT JOIN categories c ON sc.category_id = c.id
-            WHERE sc.id = ? AND sc.is_active = 1
+            INNER JOIN categories c
+                ON c.id = sc.category_id
+            WHERE sc.id = ?
+            LIMIT 1
         ");
 
         $stmt->execute([$id]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        return $result ?: null;
+
+        $subCategory = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $subCategory ?: null;
     }
 
-    private function exists(int $categoryId, string $name, ?int $excludeId = null): bool
+    // Get By Category
+    public function getByCategory(int $categoryId): array
     {
-        $sql = "SELECT id FROM sub_categories WHERE category_id = ? AND name = ? AND is_active = 1";
-        
-        if ($excludeId) {
-            $sql .= " AND id != ?";
-        }
+        $stmt = $this->db->prepare("
+            SELECT
+                id,
+                category_id,
+                name,
+                description,
+                is_active,
+                created_at
+            FROM sub_categories
+            WHERE category_id = ?
+            ORDER BY name ASC
+        ");
 
-        $stmt = $this->db->prepare($sql);
-        $params = [$categoryId, $name];
-        
-        if ($excludeId) {
-            $params[] = $excludeId;
-        }
+        $stmt->execute([$categoryId]);
 
-        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Update Sub Category
+    public function update(
+        int $id,
+        int $categoryId,
+        string $name,
+        ?string $description,
+        int $isActive
+    ): bool {
+
+        $stmt = $this->db->prepare("
+            UPDATE sub_categories
+            SET
+                category_id = ?,
+                name = ?,
+                description = ?,
+                is_active = ?
+            WHERE id = ?
+        ");
+
+        $stmt->execute([
+            $categoryId,
+            $name,
+            $description,
+            $isActive,
+            $id
+        ]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    // Delete Sub Category
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare("
+            DELETE FROM sub_categories
+            WHERE id = ?
+        ");
+
+        $stmt->execute([$id]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+    // Check Category Exists
+    public function categoryExists(int $categoryId): bool
+    {
+        $stmt = $this->db->prepare("
+            SELECT id
+            FROM categories
+            WHERE id = ?
+            LIMIT 1
+        ");
+
+        $stmt->execute([$categoryId]);
+
         return (bool)$stmt->fetch();
     }
 }

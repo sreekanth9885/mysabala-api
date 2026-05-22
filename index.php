@@ -12,12 +12,12 @@ require_once __DIR__ . '/app/Core/Router.php';
 
 require_once __DIR__ . '/app/controllers/AuthController.php';
 require_once __DIR__ . '/app/controllers/CategoryController.php';
-// require_once __DIR__ . '/app/controllers/SubCategoryController.php';
+require_once __DIR__ . '/app/controllers/SubCategoryController.php';
 
 // Instantiate controllers with database
 $authController = new AuthController($pdo);
 $categoryController = new CategoryController($pdo);
-// $subCategoryController = new SubCategoryController($pdo);
+$subCategoryController = new SubCategoryController($pdo);
 
 $router = new Router();
 
@@ -31,10 +31,17 @@ $router->get('/categories/{id}', [$categoryController, 'show']);
 $router->put('/categories/{id}', [$categoryController, 'update']);
 $router->delete('/categories/{id}', [$categoryController, 'delete']);
 
-// // Sub-category routes
-// $router->post('/sub-categories', [$subCategoryController, 'create']);
-// $router->get('/sub-categories', [$subCategoryController, 'index']);
-// $router->get('/sub-categories/{id}', [$subCategoryController, 'show']);
-// $router->put('/sub-categories/{id}', [$subCategoryController, 'update']);
-// $router->delete('/sub-categories/{id}', [$subCategoryController, 'delete']);
+// GET
+$router->get('/sub-categories', [$subCategoryController, 'index']);
+$router->get('/sub-categories/{id}', [$subCategoryController, 'show']);
+$router->get('/categories/{id}/sub-categories', [$subCategoryController, 'byCategory']);
+
+// POST
+$router->post('/sub-categories', [$subCategoryController, 'create']);
+
+// PUT
+$router->put('/sub-categories/{id}', [$subCategoryController, 'update']);
+
+// DELETE
+$router->delete('/sub-categories/{id}', [$subCategoryController, 'delete']);
 $router->dispatch();
