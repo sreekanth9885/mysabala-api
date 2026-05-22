@@ -17,3 +17,6 @@ try {
     echo json_encode(["error" => "Database connection failed"]);
     exit;
 }
+
+// Return the connection
+return $pdo;
