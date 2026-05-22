@@ -20,7 +20,7 @@ class CategoryController
 
         if (
             $user['role'] !== 'ADMIN' &&
-            $user['role'] !== 'SUPER_ADMIN'
+            $user['role'] !== 'super_admin'
         ) {
             Response::json([
                 "message" => "Forbidden - Admin access required"

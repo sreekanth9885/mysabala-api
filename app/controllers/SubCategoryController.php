@@ -20,7 +20,7 @@ class SubCategoryController
 
         if (
             $user['role'] !== 'ADMIN' &&
-            $user['role'] !== 'SUPER_ADMIN'
+            $user['role'] !== 'super_admin'
         ) {
             Response::json([
                 "message" => "Forbidden - Admin access required"
@@ -114,7 +114,7 @@ class SubCategoryController
 
         if (
             $user['role'] !== 'ADMIN' &&
-            $user['role'] !== 'SUPER_ADMIN'
+            $user['role'] !== 'super_admin'
         ) {
             Response::json([
                 "message" => "Forbidden - Admin access required"
