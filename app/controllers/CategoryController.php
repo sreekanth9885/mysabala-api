@@ -1,138 +1,146 @@
 <?php
+
 require_once __DIR__ . '/../models/CategoryModel.php';
-require_once __DIR__ . '/../helpers/JwtHelper.php';
+require_once __DIR__ . '/../Helpers/JwtHelper.php';
+require_once __DIR__ . '/../Core/Response.php';
 
 class CategoryController
 {
-    private CategoryModel $model;
+    private CategoryModel $categoryModel;
 
     public function __construct(PDO $db)
     {
-        $this->model = new CategoryModel($db);
+        $this->categoryModel = new CategoryModel($db);
     }
 
+    // Create Category
     public function create()
     {
         $user = JwtHelper::getUserFromToken();
 
-        // Change to lowercase to match your token
-        if (!in_array($user['role'], ['admin', 'super_admin', 'store_admin'])) {
-            Response::json(["message" => "Forbidden"], 403);
+        if (
+            $user['role'] !== 'ADMIN' &&
+            $user['role'] !== 'SUPER_ADMIN'
+        ) {
+            Response::json([
+                "message" => "Forbidden - Admin access required"
+            ], 403);
         }
 
         $data = json_decode(file_get_contents("php://input"), true);
 
         if (empty($data['name'])) {
-            Response::json(["message" => "Category name required"], 422);
-        }
-
-        try {
-            $description = $data['description'] ?? null;
-            
-            $id = $this->model->create(
-                trim($data['name']),
-                $description ? trim($description) : null
-            );
-
             Response::json([
-                "message" => "Category created",
-                "id" => $id
-            ], 201);
-
-        } catch (Exception $e) {
-            $status = $e->getMessage() === "Category already exists" ? 409 : 500;
-            Response::json(["message" => $e->getMessage()], $status);
+                "message" => "Category name required"
+            ], 422);
         }
+
+        $categoryId = $this->categoryModel->create(
+            trim($data['name']),
+            trim($data['description'] ?? ''),
+            (int)($data['is_active'] ?? 1)
+        );
+
+        Response::json([
+            "message" => "Category created successfully",
+            "category_id" => $categoryId
+        ], 201);
     }
 
+    // Get All Categories
     public function index()
     {
-        $user = JwtHelper::getUserFromToken();
+        JwtHelper::getUserFromToken();
 
-        // Change to lowercase to match your token
-        if (!in_array($user['role'], ['admin', 'super_admin', 'store_admin'])) {
-            Response::json(["message" => "Forbidden"], 403);
-        }
+        $categories = $this->categoryModel->all();
 
-        $data = $this->model->all();
-        Response::json(["data" => $data]);
+        Response::json([
+            "data" => $categories
+        ]);
     }
 
+    // Get Single Category
     public function show($id)
     {
-        $user = JwtHelper::getUserFromToken();
+        JwtHelper::getUserFromToken();
 
-        // Change to lowercase to match your token
-        if (!in_array($user['role'], ['admin', 'super_admin', 'store_admin'])) {
-            Response::json(["message" => "Forbidden"], 403);
-        }
-        
-        $category = $this->model->getById((int)$id);
-        
+        $category = $this->categoryModel->findById((int)$id);
+
         if (!$category) {
-            Response::json(["message" => "Category not found"], 404);
+            Response::json([
+                "message" => "Category not found"
+            ], 404);
         }
-        
-        Response::json(["data" => $category]);
+
+        Response::json([
+            "data" => $category
+        ]);
     }
 
+    // Update Category
     public function update($id)
     {
         $user = JwtHelper::getUserFromToken();
 
-        // Change to lowercase to match your token
-        if (!in_array($user['role'], ['admin', 'super_admin', 'store_admin'])) {
-            Response::json(["message" => "Forbidden"], 403);
+        if (
+            $user['role'] !== 'ADMIN' &&
+            $user['role'] !== 'super_admin'
+        ) {
+            Response::json([
+                "message" => "Forbidden - Admin access required"
+            ], 403);
         }
 
         $data = json_decode(file_get_contents("php://input"), true);
 
         if (empty($data['name'])) {
-            Response::json(["message" => "Name required"], 422);
+            Response::json([
+                "message" => "Category name required"
+            ], 422);
         }
 
-        try {
-            $description = $data['description'] ?? null;
-            
-            $updated = $this->model->update(
-                (int)$id,
-                trim($data['name']),
-                $description ? trim($description) : null
-            );
+        $updated = $this->categoryModel->update(
+            (int)$id,
+            trim($data['name']),
+            trim($data['description'] ?? ''),
+            (int)($data['is_active'] ?? 1)
+        );
 
-            if (!$updated) {
-                Response::json(["message" => "Category not found"], 404);
-            }
-
-            Response::json(["message" => "Category updated"]);
-
-        } catch (Exception $e) {
-            $status = $e->getMessage() === "Duplicate category" ? 409 : 500;
-            Response::json(["message" => $e->getMessage()], $status);
+        if (!$updated) {
+            Response::json([
+                "message" => "Category not found or no changes made"
+            ], 404);
         }
+
+        Response::json([
+            "message" => "Category updated successfully"
+        ]);
     }
 
+    // Delete Category
     public function delete($id)
     {
         $user = JwtHelper::getUserFromToken();
 
-        // Change to lowercase to match your token
-        if (!in_array($user['role'], ['admin', 'super_admin', 'store_admin'])) {
-            Response::json(["message" => "Forbidden"], 403);
+        if (
+            $user['role'] !== 'ADMIN' &&
+            $user['role'] !== 'super_admin'
+        ) {
+            Response::json([
+                "message" => "Forbidden - Admin access required"
+            ], 403);
         }
 
-        try {
-            $deleted = $this->model->delete((int)$id);
+        $deleted = $this->categoryModel->delete((int)$id);
 
-            if (!$deleted) {
-                Response::json(["message" => "Category not found"], 404);
-            }
-
-            Response::json(["message" => "Category deleted"]);
-            
-        } catch (Exception $e) {
-            $status = $e->getMessage() === "Cannot delete category. Products are linked." ? 409 : 500;
-            Response::json(["message" => $e->getMessage()], $status);
+        if (!$deleted) {
+            Response::json([
+                "message" => "Category not found"
+            ], 404);
         }
+
+        Response::json([
+            "message" => "Category deleted successfully"
+        ]);
     }
 }
