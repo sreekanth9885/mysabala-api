@@ -73,7 +73,7 @@ class FoodItemController
     // Get Single Food Item
     public function show($id)
     {
-        JwtHelper::getUserFromToken();
+        // JwtHelper::getUserFromToken();
 
         $foodItem = $this->foodItemModel->findById((int)$id);
 

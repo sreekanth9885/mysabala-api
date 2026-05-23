@@ -50,7 +50,7 @@ class CategoryController
     // Get All Categories
     public function index()
     {
-        JwtHelper::getUserFromToken();
+        // JwtHelper::getUserFromToken();
 
         $categories = $this->categoryModel->all();
 
@@ -62,7 +62,7 @@ class CategoryController
     // Get Single Category
     public function show($id)
     {
-        JwtHelper::getUserFromToken();
+        // JwtHelper::getUserFromToken();
 
         $category = $this->categoryModel->findById((int)$id);
 
