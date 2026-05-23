@@ -61,7 +61,7 @@ class FoodItemController
     // Get All Food Items
     public function index()
     {
-        JwtHelper::getUserFromToken();
+        // JwtHelper::getUserFromToken();
 
         $foodItems = $this->foodItemModel->all();
 
