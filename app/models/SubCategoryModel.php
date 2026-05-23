@@ -53,6 +53,7 @@ class SubCategoryModel
             FROM sub_categories sc
             INNER JOIN categories c
                 ON c.id = sc.category_id
+            WHERE sc.is_active = 1
             ORDER BY sc.id DESC
         ");
 
@@ -77,6 +78,7 @@ class SubCategoryModel
             INNER JOIN categories c
                 ON c.id = sc.category_id
             WHERE sc.id = ?
+            AND sc.is_active = 1
             LIMIT 1
         ");
 
@@ -100,6 +102,7 @@ class SubCategoryModel
                 created_at
             FROM sub_categories
             WHERE category_id = ?
+            AND is_active = 1
             ORDER BY name ASC
         ");
 
@@ -142,7 +145,8 @@ class SubCategoryModel
     public function delete(int $id): bool
     {
         $stmt = $this->db->prepare("
-            DELETE FROM sub_categories
+            UPDATE sub_categories
+            SET is_active = 0
             WHERE id = ?
         ");
 

@@ -41,7 +41,7 @@ class CategoryModel
                 is_active,
                 created_at
             FROM categories
-            ORDER BY id DESC
+            WHERE is_active = 1
         ");
 
         $stmt->execute();
@@ -61,6 +61,7 @@ class CategoryModel
                 created_at
             FROM categories
             WHERE id = ?
+            AND is_active = 1
             LIMIT 1
         ");
 
@@ -102,7 +103,8 @@ class CategoryModel
     public function delete(int $id): bool
     {
         $stmt = $this->db->prepare("
-            DELETE FROM categories
+            UPDATE categories
+            SET is_active = 0
             WHERE id = ?
         ");
 
