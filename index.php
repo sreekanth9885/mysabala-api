@@ -15,12 +15,14 @@ require_once __DIR__ . '/app/controllers/CategoryController.php';
 require_once __DIR__ . '/app/controllers/SubCategoryController.php';
 require_once __DIR__ . '/app/controllers/FoodItemController.php';
 require_once __DIR__ . '/app/controllers/UploadController.php';
+require_once __DIR__ . '/app/controllers/OrderController.php';
 // Instantiate controllers with database
 $authController = new AuthController($pdo);
 $categoryController = new CategoryController($pdo);
 $subCategoryController = new SubCategoryController($pdo);
 $foodItemController = new FoodItemController($pdo);
 $uploadController = new UploadController($pdo);
+$orderController = new OrderController($pdo);
 
 $router = new Router();
 
@@ -52,5 +54,7 @@ $router->get('/sub-categories/{id}/food-items', [$foodItemController, 'bySubCate
 $router->put('/food-items/{id}', [$foodItemController, 'update']);
 $router->delete('/food-items/{id}', [$foodItemController, 'delete']);
 $router->post('/upload/food-image', [$uploadController, 'uploadFoodImage']);
+$router->post('/orders/create', [$orderController, 'createOrder']);
+$router->post('/orders/verify-payment', [$orderController, 'verifyPayment']);
 
 $router->dispatch();
