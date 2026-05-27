@@ -27,6 +27,7 @@ $router = new Router();
 $router->post('/login', [$authController, 'login']);
 $router->get('/me', [$authController, 'me']);
 $router->post('/logout', [$authController, 'logout']);
+$router->post('/register', [$authController, 'register']);
 
 $router->post('/categories', [$categoryController, 'create']);
 $router->get('/categories', [$categoryController, 'index']);

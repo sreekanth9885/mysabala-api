@@ -34,4 +34,29 @@ class User
 
         return $stmt->execute([$userId]);
     }
+    public function create(
+        string $name,
+        string $email,
+        string $password
+    ): int {
+
+        $stmt = $this->db->prepare("
+        INSERT INTO users (
+            name,
+            email,
+            password,
+            role,
+            status
+        )
+        VALUES (?, ?, ?, 'staff', 'active')
+    ");
+
+        $stmt->execute([
+            $name,
+            $email,
+            $password
+        ]);
+
+        return (int)$this->db->lastInsertId();
+    }
 }

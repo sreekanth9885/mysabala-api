@@ -59,4 +59,60 @@ class AuthController
     {
         Response::json(["message" => "Logout successful"]);
     }
+    public static function register()
+    {
+        global $pdo;
+
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        $name = trim($data['name'] ?? '');
+        $email = trim($data['email'] ?? '');
+        $password = trim($data['password'] ?? '');
+
+        if (!$name || !$email || !$password) {
+            Response::json([
+                "message" => "Name, email and password required"
+            ], 422);
+        }
+
+        $userModel = new User($pdo);
+
+        // CHECK EXISTING USER
+        $existingUser = $userModel->findByEmail($email);
+
+        if ($existingUser) {
+            Response::json([
+                "message" => "Email already exists"
+            ], 409);
+        }
+
+        // HASH PASSWORD
+        $hashedPassword = password_hash(
+            $password,
+            PASSWORD_BCRYPT
+        );
+
+        // CREATE USER
+        $userId = $userModel->create(
+            $name,
+            $email,
+            $hashedPassword
+        );
+
+        $user = $userModel->findByEmail($email);
+
+        $token = JwtHelper::generateAccessToken([
+            "id" => $user['id'],
+            "email" => $user['email'],
+            "role" => $user['role']
+        ]);
+
+        unset($user['password']);
+
+        Response::json([
+            "message" => "Registration successful",
+            "token" => $token,
+            "user" => $user
+        ], 201);
+    }
 }
