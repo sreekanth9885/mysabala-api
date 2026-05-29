@@ -56,5 +56,7 @@ $router->delete('/food-items/{id}', [$foodItemController, 'delete']);
 $router->post('/upload/food-image', [$uploadController, 'uploadFoodImage']);
 $router->post('/orders/create', [$orderController, 'createOrder']);
 $router->post('/orders/verify-payment', [$orderController, 'verifyPayment']);
+$router->get('/orders', [$orderController, 'index']);
+$router->get('/orders/{id}', [$orderController, 'show']);
 
 $router->dispatch();

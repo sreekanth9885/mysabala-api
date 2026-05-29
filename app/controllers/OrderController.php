@@ -135,4 +135,34 @@ class OrderController
             "message" => "Order placed successfully"
         ]);
     }
+    public function index()
+    {
+        $stmt = $this->db->query("SELECT * FROM orders ORDER BY created_at DESC");
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($orders as &$order) {
+            $stmtItems = $this->db->prepare("SELECT * FROM order_items WHERE order_id = ?");
+            $stmtItems->execute([$order['id']]);
+            $order['items'] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        Response::json($orders);
+    }
+    public function show($id)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ?");
+        $stmt->execute([$id]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$order) {
+            Response::json(["message" => "Order not found"], 404);
+            return;
+        }
+
+        $stmtItems = $this->db->prepare("SELECT * FROM order_items WHERE order_id = ?");
+        $stmtItems->execute([$order['id']]);
+        $order['items'] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+
+        Response::json($order);
+    }
 }
