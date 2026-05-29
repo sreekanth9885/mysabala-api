@@ -150,33 +150,19 @@ class OrderController
     }
     public function show($id)
     {
-        $stmt = $this->db->prepare("
-        SELECT * FROM orders 
-        WHERE user_id = ?
-        ORDER BY created_at DESC
-    ");
-
+        $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ?");
         $stmt->execute([$id]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if (!$orders) {
-            Response::json([], 200);
+        if (!$order) {
+            Response::json(["message" => "Order not found"], 404);
             return;
         }
 
-        foreach ($orders as &$order) {
+        $stmtItems = $this->db->prepare("SELECT * FROM order_items WHERE order_id = ?");
+        $stmtItems->execute([$order['id']]);
+        $order['items'] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
 
-            $stmtItems = $this->db->prepare("
-            SELECT * FROM order_items 
-            WHERE order_id = ?
-        ");
-
-            $stmtItems->execute([$order['id']]);
-
-            $order['items'] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-        }
-
-        Response::json($orders);
+        Response::json($order);
     }
 }
