@@ -49,7 +49,7 @@ class OrderController
             file_get_contents("php://input"),
             true
         );
-
+        $userId = $data['user_id'];
         $customerName = $data['customer_name'];
         $phone = $data['phone'];
 
@@ -69,26 +69,28 @@ class OrderController
         $signature = $data['razorpay_signature'];
 
         $stmt = $this->db->prepare("
-            INSERT INTO orders (
-                customer_name,
-                customer_phone,
-                address,
-                city,
-                pincode,
-                subtotal,
-                delivery_fee,
-                gst,
-                grand_total,
-                payment_method,
-                payment_status,
-                razorpay_order_id,
-                razorpay_payment_id,
-                razorpay_signature
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
+    INSERT INTO orders (
+        user_id,
+        customer_name,
+        customer_phone,
+        address,
+        city,
+        pincode,
+        subtotal,
+        delivery_fee,
+        gst,
+        grand_total,
+        payment_method,
+        payment_status,
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+");
 
         $stmt->execute([
+            $userId,
             $customerName,
             $phone,
             $address,
@@ -150,19 +152,28 @@ class OrderController
     }
     public function show($id)
     {
-        $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ?");
-        $stmt->execute([$id]);
-        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $this->db->prepare("
+        SELECT * FROM orders
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+    ");
 
-        if (!$order) {
-            Response::json(["message" => "Order not found"], 404);
-            return;
+        $stmt->execute([$id]);
+
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($orders as &$order) {
+
+            $stmtItems = $this->db->prepare("
+            SELECT * FROM order_items
+            WHERE order_id = ?
+        ");
+
+            $stmtItems->execute([$order['id']]);
+
+            $order['items'] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
         }
 
-        $stmtItems = $this->db->prepare("SELECT * FROM order_items WHERE order_id = ?");
-        $stmtItems->execute([$order['id']]);
-        $order['items'] = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
-
-        Response::json($order);
+        Response::json($orders);
     }
 }
